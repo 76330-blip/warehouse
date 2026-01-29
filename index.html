@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Виртуальный Склад v2.0</title>
+    <style>
+        /* ==================== RESET ==================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ==================== GLOBAL ==================== */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Roboto', 'Segoe UI', sans-serif;
+            background: #F5F5F5;
+            color: #333;
+            padding-bottom: 200px;
+        }
+
+        /* ==================== HEADER ==================== */
+        .header {
+            background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+            color: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px 10px;
+            margin-right: 10px;
+            display: none;
+        }
+
+        .header-title {
+            flex: 1;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .breadcrumbs {
+            font-size: 14px;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .breadcrumb-link {
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .breadcrumb-link:hover {
+            opacity: 0.8;
+        }
+
+        /* ==================== SEARCH ==================== */
+        .search-bar {
+            padding: 15px 20px;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #E0E0E0;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+            transition: border 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: #4A90E2;
+        }
+
+        /* ==================== SEARCH RESULTS ==================== */
+        .search-results {
+            background: white;
+            margin: 0 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .search-results.show {
+            display: block;
+        }
+
+        .search-result-item {
+            padding: 15px;
+            border-bottom: 1px solid #F0F0F0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-item:active {
+            background: #F8F8F8;
+        }
+
+        .search-result-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .search-result-path {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .search-no-results {
+            padding: 20px;
+            text-align: center;
+            color: #999;
+        }
+
+        /* ==================== CONTENT ==================== */
+        .content {
+            padding: 10px 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .empty-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .empty-text {
+            font-size: 14px;
+        }
+
+        /* ==================== ITEM CARDS ==================== */
+        .item-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: transform 0.2s;
+        }
+
+        .item-card:active {
+            transform: scale(0.98);
+        }
+
+        .item-visual {
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .item-icon {
+            font-size: 40px;
+        }
+
+        .item-photo {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 2px solid #E0E0E0;
+        }
+
+        .item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .item-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .item-details {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #E3F2FD;
+            color: #1976D2;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-right: 8px;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .action-btn {
+            width: 44px;
+            height: 44px;
+            border: none;
+            background: #F0F0F0;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .action-btn:active {
+            background: #E0E0E0;
+        }
+
+        .action-btn-delete {
+            background: #FFE5E5;
+            color: #E53935;
+        }
+
+        .action-btn-delete:active {
+            background: #FFCCCC;
+        }
+
+        .item-arrow {
+            font-size: 24px;
+            color: #CCC;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .item-clickable {
+            cursor: pointer;
+        }
+
+        /* ==================== FAB BUTTONS ==================== */
+        .fab-container {
+            position: fixed;
+            bottom: 180px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 999999;
+            pointer-events: auto;
+        }
+
+        .fab {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #FF9500 0%, #FF7A00 100%);
+            color: white;
+            font-size: 28px;
+            box-shadow: 0 4px 15px rgba(255, 149, 0, 0.4);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+            pointer-events: auto;
+        }
+
+        .fab:active {
+            transform: scale(0.9);
+        }
+
+        .fab-secondary {
+            width: 50px;
+            height: 50px;
+            background: #4A90E2;
+            font-size: 24px;
+            box-shadow: 0 3px 12px rgba(74, 144, 226, 0.4);
+            display: none;
+        }
+
+        .fab-secondary.show {
+            display: flex;
+        }
+
+        /* ==================== MODAL ==================== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999999;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        /* ==================== FORMS ==================== */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #E0E0E0;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+            transition: border 0.3s;
+        }
+
+        .form-input:focus {
+            border-color: #4A90E2;
+        }
+
+        .photo-upload-btn {
+            width: 100%;
+            padding: 12px;
+            background: #F0F0F0;
+            border: 2px dashed #CCC;
+            border-radius: 10px;
+            font-size: 16px;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .photo-upload-btn:hover {
+            background: #E8E8E8;
+            border-color: #4A90E2;
+        }
+
+        .photo-preview {
+            width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+            border-radius: 10px;
+            margin-top: 10px;
+            border: 2px solid #E0E0E0;
+            display: none;
+        }
+
+        .photo-preview.show {
+            display: block;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #4A90E2;
+            color: white;
+        }
+
+        .btn-primary:active {
+            background: #357ABD;
+        }
+
+        .btn-secondary {
+            background: #F0F0F0;
+            color: #666;
+        }
+
+        .btn-secondary:active {
+            background: #E0E0E0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <button class="back-btn" id="backBtn">←</button>
+            <div class="header-title">
+                <h1>📦 Виртуальный Склад v2.0</h1>
+                <div class="breadcrumbs" id="breadcrumbs">
+                    <span>Главная</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-bar">
+        <input type="text" class="search-input" id="searchInput" placeholder="🔍 Поиск контейнеров и предметов...">
+    </div>
+
+    <!-- Search Results -->
+    <div class="search-results" id="searchResults"></div>
+
+    <!-- Content -->
+    <div class="content" id="content">
+        <div class="empty-state">
+            <div class="empty-icon">📦</div>
+            <div class="empty-title">Склад пуст</div>
+            <div class="empty-text">Создайте первый контейнер</div>
+        </div>
+    </div>
+
+    <!-- FAB Buttons -->
+    <div class="fab-container">
+        <button class="fab fab-secondary" id="addItemBtn">📝</button>
+        <button class="fab" id="addContainerBtn">+</button>
+    </div>
+
+    <!-- Modal: Container -->
+    <div class="modal" id="containerModal">
+        <div class="modal-content">
+            <div class="modal-header" id="containerModalTitle">Новый контейнер</div>
+            <form id="containerForm">
+                <div class="form-group">
+                    <label class="form-label">Название *</label>
+                    <input type="text" class="form-input" id="containerNameInput" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Фото (необязательно)</label>
+                    <input type="file" id="containerPhotoInput" accept="image/*" style="display: none;">
+                    <div class="photo-upload-btn" id="containerPhotoBtn">
+                        📷 Загрузить фото
+                    </div>
+                    <img id="containerPhotoPreview" class="photo-preview">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="containerCancelBtn">Отмена</button>
+                    <button type="button" class="btn btn-primary" id="containerSaveBtn">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Item -->
+    <div class="modal" id="itemModal">
+        <div class="modal-content">
+            <div class="modal-header" id="itemModalTitle">Новый предмет</div>
+            <form id="itemForm">
+                <div class="form-group">
+                    <label class="form-label">Название *</label>
+                    <input type="text" class="form-input" id="itemNameInput" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Количество *</label>
+                    <input type="number" class="form-input" id="itemQuantityInput" min="1" value="1" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Категория</label>
+                    <select class="form-input" id="itemCategoryInput">
+                        <option value="">Без категории</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Фото (необязательно)</label>
+                    <input type="file" id="itemPhotoInput" accept="image/*" style="display: none;">
+                    <div class="photo-upload-btn" id="itemPhotoBtn">
+                        📷 Загрузить фото
+                    </div>
+                    <img id="itemPhotoPreview" class="photo-preview">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="itemCancelBtn">Отмена</button>
+                    <button type="button" class="btn btn-primary" id="itemSaveBtn">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        console.log('🎯 Виртуальный Склад v2.0 - Запуск');
+
+        // ==================== DATA STRUCTURE ====================
+        const DEFAULT_CATEGORIES = [
+            { id: 'cat1', name: 'Инструменты', icon: '🔧' },
+            { id: 'cat2', name: 'Канцелярия', icon: '📝' },
+            { id: 'cat3', name: 'Бытовые вещи', icon: '🏠' },
+            { id: 'cat4', name: 'Электроника', icon: '⚡' },
+            { id: 'cat5', name: 'Одежда', icon: '👕' }
+        ];
+
+        let warehouse = {
+            containers: [],
+            items: [],
+            categories: DEFAULT_CATEGORIES
+        };
+
+        let currentContainerId = null;
+        let editingContainerId = null;
+        let editingItemId = null;
+
+        // ==================== UTILITY FUNCTIONS ====================
+        function generateId() {
+            return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('warehouseData_v2', JSON.stringify(warehouse));
+            console.log('💾 Данные сохранены:', warehouse.containers.length, 'контейнеров,', warehouse.items.length, 'предметов');
+        }
+
+        function loadFromStorage() {
+            const saved = localStorage.getItem('warehouseData_v2');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    warehouse.containers = parsed.containers || [];
+                    warehouse.items = parsed.items || [];
+                    warehouse.categories = parsed.categories || DEFAULT_CATEGORIES;
+                    console.log('✅ Данные загружены:', warehouse.containers.length, 'контейнеров,', warehouse.items.length, 'предметов');
+                } catch (e) {
+                    console.error('❌ Ошибка загрузки данных:', e);
+                }
+            } else {
+                console.log('⚠️ Нет сохранённых данных');
+            }
+        }
+
+        // ==================== CONTAINER FUNCTIONS ====================
+        function getContainerById(id) {
+            return warehouse.containers.find(c => c.id === id);
+        }
+
+        function getContainerChildren(parentId) {
+            return warehouse.containers.filter(c => c.parent === parentId);
+        }
+
+        function getContainerItems(containerId) {
+            return warehouse.items.filter(i => i.container === containerId);
+        }
+
+        function getContainerPath(containerId) {
+            const path = [];
+            let current = getContainerById(containerId);
+            
+            while (current) {
+                path.unshift(current);
+                current = current.parent ? getContainerById(current.parent) : null;
+            }
+            
+            return path;
+        }
+
+        function getContainerContentCount(containerId) {
+            const childContainers = getContainerChildren(containerId).length;
+            const items = getContainerItems(containerId).length;
+            return childContainers + items;
+        }
+
+        function canDeleteContainer(containerId) {
+            return getContainerContentCount(containerId) === 0;
+        }
+
+        // ==================== ITEM FUNCTIONS ====================
+        function getItemById(id) {
+            return warehouse.items.find(i => i.id === id);
+        }
+
+        function getCategoryById(id) {
+            return warehouse.categories.find(c => c.id === id);
+        }
+
+        // ==================== NAVIGATION ====================
+        function navigateToRoot() {
+            console.log('🏠 Переход на главную');
+            currentContainerId = null;
+            render();
+        }
+
+        function navigateToContainer(containerId) {
+            console.log('📂 Переход в контейнер:', containerId);
+            currentContainerId = containerId;
+            render();
+        }
+
+        function navigateBack() {
+            if (!currentContainerId) return;
+            
+            const container = getContainerById(currentContainerId);
+            currentContainerId = container ? container.parent : null;
+            console.log('⬅️ Назад');
+            render();
+        }
+
+        // ==================== RENDERING ====================
+        function renderBreadcrumbs() {
+            const breadcrumbs = document.getElementById('breadcrumbs');
+            
+            if (!currentContainerId) {
+                breadcrumbs.innerHTML = '<span>Главная</span>';
+                document.getElementById('backBtn').style.display = 'none';
+                return;
+            }
+            
+            const path = getContainerPath(currentContainerId);
+            let html = '<span class="breadcrumb-link">Главная</span>';
+            
+            path.forEach((container, index) => {
+                html += ' <span>›</span> ';
+                if (index === path.length - 1) {
+                    html += `<span>${container.name}</span>`;
+                } else {
+                    html += `<span class="breadcrumb-link" data-container-id="${container.id}">${container.name}</span>`;
+                }
+            });
+            
+            breadcrumbs.innerHTML = html;
+            document.getElementById('backBtn').style.display = 'block';
+            
+            // Add click handlers to breadcrumb links
+            breadcrumbs.querySelectorAll('.breadcrumb-link').forEach(link => {
+                link.addEventListener('click', () => {
+                    const containerId = link.getAttribute('data-container-id');
+                    if (containerId) {
+                        navigateToContainer(containerId);
+                    } else {
+                        navigateToRoot();
+                    }
+                });
+            });
+        }
+
+        function renderContent() {
+            const content = document.getElementById('content');
+            const containers = getContainerChildren(currentContainerId);
+            const items = getContainerItems(currentContainerId);
+            
+            // Show/hide add item button
+            const addItemBtn = document.getElementById('addItemBtn');
+            if (currentContainerId) {
+                addItemBtn.classList.add('show');
+            } else {
+                addItemBtn.classList.remove('show');
+            }
+            
+            // Empty state
+            if (containers.length === 0 && items.length === 0) {
+                content.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📦</div>
+                        <div class="empty-title">${currentContainerId ? 'Контейнер пуст' : 'Склад пуст'}</div>
+                        <div class="empty-text">${currentContainerId ? 'Добавьте контейнеры или предметы' : 'Создайте первый контейнер'}</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            
+            // Render containers
+            containers.forEach(container => {
+                const count = getContainerContentCount(container.id);
+                const visual = container.photo 
+                    ? `<img src="${container.photo}" class="item-photo">`
+                    : `<div class="item-icon">📦</div>`;
+                
+                html += `
+                    <div class="item-card">
+                        <div class="item-visual" data-action="open" data-id="${container.id}">
+                            ${visual}
+                        </div>
+                        <div class="item-info item-clickable" data-action="open" data-id="${container.id}">
+                            <div class="item-name">${container.name}</div>
+                            <div class="item-details">${count} объектов</div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="action-btn" data-action="edit-container" data-id="${container.id}">✏️</button>
+                            <button class="action-btn action-btn-delete" data-action="delete-container" data-id="${container.id}">🗑️</button>
+                        </div>
+                        <div class="item-arrow" data-action="open" data-id="${container.id}">→</div>
+                    </div>
+                `;
+            });
+            
+            // Render items
+            items.forEach(item => {
+                const category = getCategoryById(item.category);
+                const visual = item.photo 
+                    ? `<img src="${item.photo}" class="item-photo">`
+                    : `<div class="item-icon">📦</div>`;
+                const categoryBadge = category 
+                    ? `<span class="category-badge">${category.icon} ${category.name}</span>`
+                    : '';
+                
+                html += `
+                    <div class="item-card">
+                        <div class="item-visual">
+                            ${visual}
+                        </div>
+                        <div class="item-info">
+                            <div class="item-name">${item.name}</div>
+                            <div class="item-details">
+                                ${categoryBadge}
+                                ${item.quantity} шт
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="action-btn" data-action="edit-item" data-id="${item.id}">✏️</button>
+                            <button class="action-btn action-btn-delete" data-action="delete-item" data-id="${item.id}">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            content.innerHTML = html;
+            
+            // Add event listeners
+            content.querySelectorAll('[data-action]').forEach(element => {
+                element.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const action = element.getAttribute('data-action');
+                    const id = element.getAttribute('data-id');
+                    handleAction(action, id);
+                });
+            });
+        }
+
+        function render() {
+            renderBreadcrumbs();
+            renderContent();
+        }
+
+        // ==================== ACTION HANDLERS ====================
+        function handleAction(action, id) {
+            console.log('🎬 Действие:', action, id);
+            
+            switch (action) {
+                case 'open':
+                    navigateToContainer(id);
+                    break;
+                case 'edit-container':
+                    openContainerModal(id);
+                    break;
+                case 'delete-container':
+                    deleteContainer(id);
+                    break;
+                case 'edit-item':
+                    openItemModal(id);
+                    break;
+                case 'delete-item':
+                    deleteItem(id);
+                    break;
+            }
+        }
+
+        // ==================== CONTAINER MODAL ====================
+        function openContainerModal(containerId = null) {
+            console.log('📝 Открытие модалки контейнера:', containerId || 'новый');
+            
+            editingContainerId = containerId;
+            const modal = document.getElementById('containerModal');
+            const title = document.getElementById('containerModalTitle');
+            const nameInput = document.getElementById('containerNameInput');
+            const photoPreview = document.getElementById('containerPhotoPreview');
+            
+            if (containerId) {
+                const container = getContainerById(containerId);
+                title.textContent = 'Редактировать контейнер';
+                nameInput.value = container.name;
+                
+                if (container.photo) {
+                    photoPreview.src = container.photo;
+                    photoPreview.classList.add('show');
+                } else {
+                    photoPreview.classList.remove('show');
+                }
+            } else {
+                title.textContent = 'Новый контейнер';
+                nameInput.value = '';
+                photoPreview.classList.remove('show');
+            }
+            
+            modal.classList.add('show');
+        }
+
+        function closeContainerModal() {
+            document.getElementById('containerModal').classList.remove('show');
+            editingContainerId = null;
+        }
+
+        function saveContainer() {
+            console.log('💾 Сохранение контейнера');
+            
+            const nameInput = document.getElementById('containerNameInput');
+            const name = nameInput.value.trim();
+            
+            if (!name) {
+                alert('Введите название контейнера!');
+                return;
+            }
+            
+            const photoPreview = document.getElementById('containerPhotoPreview');
+            const photo = photoPreview.classList.contains('show') ? photoPreview.src : null;
+            
+            if (editingContainerId) {
+                // Edit existing
+                const container = getContainerById(editingContainerId);
+                container.name = name;
+                container.photo = photo;
+                console.log('✏️ Контейнер отредактирован:', editingContainerId);
+            } else {
+                // Create new
+                const container = {
+                    id: generateId(),
+                    name: name,
+                    photo: photo,
+                    parent: currentContainerId,
+                    created: new Date().toISOString()
+                };
+                warehouse.containers.push(container);
+                console.log('➕ Новый контейнер создан:', container.id);
+            }
+            
+            saveToStorage();
+            render();
+            closeContainerModal();
+        }
+
+        function deleteContainer(containerId) {
+            if (!canDeleteContainer(containerId)) {
+                const count = getContainerContentCount(containerId);
+                alert(`В контейнере ${count} объектов. Удалите или переместите содержимое.`);
+                return;
+            }
+            
+            if (!confirm('Удалить этот контейнер?')) {
+                return;
+            }
+            
+            warehouse.containers = warehouse.containers.filter(c => c.id !== containerId);
+            console.log('🗑️ Контейнер удалён:', containerId);
+            saveToStorage();
+            render();
+        }
+
+        // ==================== ITEM MODAL ====================
+        function openItemModal(itemId = null) {
+            console.log('📝 Открытие модалки предмета:', itemId || 'новый');
+            
+            if (!currentContainerId) {
+                alert('Сначала откройте контейнер');
+                return;
+            }
+            
+            editingItemId = itemId;
+            const modal = document.getElementById('itemModal');
+            const title = document.getElementById('itemModalTitle');
+            const nameInput = document.getElementById('itemNameInput');
+            const quantityInput = document.getElementById('itemQuantityInput');
+            const categoryInput = document.getElementById('itemCategoryInput');
+            const photoPreview = document.getElementById('itemPhotoPreview');
+            
+            if (itemId) {
+                const item = getItemById(itemId);
+                title.textContent = 'Редактировать предмет';
+                nameInput.value = item.name;
+                quantityInput.value = item.quantity;
+                categoryInput.value = item.category || '';
+                
+                if (item.photo) {
+                    photoPreview.src = item.photo;
+                    photoPreview.classList.add('show');
+                } else {
+                    photoPreview.classList.remove('show');
+                }
+            } else {
+                title.textContent = 'Новый предмет';
+                nameInput.value = '';
+                quantityInput.value = 1;
+                categoryInput.value = '';
+                photoPreview.classList.remove('show');
+            }
+            
+            modal.classList.add('show');
+        }
+
+        function closeItemModal() {
+            document.getElementById('itemModal').classList.remove('show');
+            editingItemId = null;
+        }
+
+        function saveItem() {
+            console.log('💾 Сохранение предмета');
+            
+            const nameInput = document.getElementById('itemNameInput');
+            const name = nameInput.value.trim();
+            
+            if (!name) {
+                alert('Введите название предмета!');
+                return;
+            }
+            
+            const quantityInput = document.getElementById('itemQuantityInput');
+            const quantity = parseInt(quantityInput.value);
+            
+            const categoryInput = document.getElementById('itemCategoryInput');
+            const category = categoryInput.value || null;
+            
+            const photoPreview = document.getElementById('itemPhotoPreview');
+            const photo = photoPreview.classList.contains('show') ? photoPreview.src : null;
+            
+            if (editingItemId) {
+                // Edit existing
+                const item = getItemById(editingItemId);
+                item.name = name;
+                item.quantity = quantity;
+                item.category = category;
+                item.photo = photo;
+                console.log('✏️ Предмет отредактирован:', editingItemId);
+            } else {
+                // Create new
+                const item = {
+                    id: generateId(),
+                    name: name,
+                    quantity: quantity,
+                    category: category,
+                    photo: photo,
+                    container: currentContainerId,
+                    created: new Date().toISOString()
+                };
+                warehouse.items.push(item);
+                console.log('➕ Новый предмет создан:', item.id);
+            }
+            
+            saveToStorage();
+            render();
+            closeItemModal();
+        }
+
+        function deleteItem(itemId) {
+            if (!confirm('Удалить этот предмет?')) {
+                return;
+            }
+            
+            warehouse.items = warehouse.items.filter(i => i.id !== itemId);
+            console.log('🗑️ Предмет удалён:', itemId);
+            saveToStorage();
+            render();
+        }
+
+        // ==================== PHOTO HANDLING ====================
+        function handlePhotoUpload(inputElement, previewElement) {
+            const file = inputElement.files[0];
+            if (!file) return;
+            
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Файл слишком большой. Максимум 5 МБ.');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewElement.src = e.target.result;
+                previewElement.classList.add('show');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // ==================== SEARCH ====================
+        function handleSearch(query) {
+            const resultsContainer = document.getElementById('searchResults');
+            
+            if (!query || query.length === 0) {
+                resultsContainer.classList.remove('show');
+                return;
+            }
+            
+            const lowerQuery = query.toLowerCase();
+            
+            const containerResults = warehouse.containers.filter(c => 
+                c.name.toLowerCase().includes(lowerQuery)
+            );
+            
+            const itemResults = warehouse.items.filter(i => 
+                i.name.toLowerCase().includes(lowerQuery)
+            );
+            
+            if (containerResults.length === 0 && itemResults.length === 0) {
+                resultsContainer.innerHTML = '<div class="search-no-results">Ничего не найдено</div>';
+                resultsContainer.classList.add('show');
+                return;
+            }
+            
+            let html = '';
+            
+            containerResults.forEach(container => {
+                const path = getContainerPath(container.id).map(c => c.name).join(' › ');
+                html += `
+                    <div class="search-result-item" data-search-container="${container.parent || ''}">
+                        <div class="search-result-name">📦 ${container.name}</div>
+                        <div class="search-result-path">${path || 'Главная'}</div>
+                    </div>
+                `;
+            });
+            
+            itemResults.forEach(item => {
+                const container = getContainerById(item.container);
+                const path = container ? getContainerPath(container.id).map(c => c.name).join(' › ') : 'Главная';
+                html += `
+                    <div class="search-result-item" data-search-container="${item.container}">
+                        <div class="search-result-name">📦 ${item.name} (${item.quantity} шт)</div>
+                        <div class="search-result-path">${path}</div>
+                    </div>
+                `;
+            });
+            
+            resultsContainer.innerHTML = html;
+            resultsContainer.classList.add('show');
+            
+            // Add click handlers
+            resultsContainer.querySelectorAll('.search-result-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const containerId = item.getAttribute('data-search-container');
+                    if (containerId) {
+                        navigateToContainer(containerId);
+                    } else {
+                        navigateToRoot();
+                    }
+                    document.getElementById('searchInput').value = '';
+                    resultsContainer.classList.remove('show');
+                });
+            });
+        }
+
+        // ==================== CATEGORIES ====================
+        function loadCategories() {
+            const select = document.getElementById('itemCategoryInput');
+            select.innerHTML = '<option value="">Без категории</option>';
+            
+            warehouse.categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.id;
+                option.textContent = `${cat.icon} ${cat.name}`;
+                select.appendChild(option);
+            });
+        }
+
+        // ==================== INITIALIZATION ====================
+        function init() {
+            console.log('🚀 Инициализация приложения v2.0');
+            
+            // Load data
+            loadFromStorage();
+            
+            // Load categories
+            loadCategories();
+            
+            // Render
+            render();
+            
+            // Event listeners - Navigation
+            document.getElementById('backBtn').addEventListener('click', navigateBack);
+            
+            // Event listeners - FAB buttons
+            document.getElementById('addContainerBtn').addEventListener('click', () => openContainerModal());
+            document.getElementById('addItemBtn').addEventListener('click', () => openItemModal());
+            
+            // Event listeners - Container modal
+            document.getElementById('containerCancelBtn').addEventListener('click', closeContainerModal);
+            document.getElementById('containerSaveBtn').addEventListener('click', saveContainer);
+            document.getElementById('containerPhotoBtn').addEventListener('click', () => {
+                document.getElementById('containerPhotoInput').click();
+            });
+            document.getElementById('containerPhotoInput').addEventListener('change', (e) => {
+                handlePhotoUpload(e.target, document.getElementById('containerPhotoPreview'));
+            });
+            
+            // Event listeners - Item modal
+            document.getElementById('itemCancelBtn').addEventListener('click', closeItemModal);
+            document.getElementById('itemSaveBtn').addEventListener('click', saveItem);
+            document.getElementById('itemPhotoBtn').addEventListener('click', () => {
+                document.getElementById('itemPhotoInput').click();
+            });
+            document.getElementById('itemPhotoInput').addEventListener('change', (e) => {
+                handlePhotoUpload(e.target, document.getElementById('itemPhotoPreview'));
+            });
+            
+            // Event listeners - Search
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                handleSearch(e.target.value.trim());
+            });
+            
+            console.log('✅ Инициализация завершена');
+        }
+
+        // Start the application
+        init();
+    </script>
+</body>
+</html>
